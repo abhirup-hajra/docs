@@ -2,93 +2,149 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FlintAI API",
-    "description": "Discover how to seemlessly integrate chat, streaming, and tool-calling in your apps.",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "FlintAI is a minimal, highly abstracted OpenAI-compatible API used to interact with chat, models, and streaming responses. Built by Flint Studios."
   },
   "servers": [
     {
-      "url": "https://ai.flintstudios.workers.dev"
+      "url": "https://ai.flintstudios.workers.dev/v1",
+      "description": "Primary API server"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Authenticate using your FlintAI API key"
+      }
+    },
+    "schemas": {
+      "Message": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "system", "tool"],
+            "description": "Role of the message author"
+          },
+          "content": {
+            "type": "string",
+            "description": "Text content of the message"
+          }
+        },
+        "required": ["role", "content"]
+      },
+      "Model": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "created": { "type": "integer" },
+          "owned_by": { "type": "string" },
+          "description": { "type": "string" },
+          "modifiers": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  },
   "security": [
     {
       "bearerAuth": []
     }
   ],
   "paths": {
-    "/v1/chat/completions": {
-      "chat_completions": {
-        "description": "Creates a model response for the given conversation.",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
+    "/models": {
+      "get": {
+        "summary": "List models",
+        "description": "Retrieve all available models with their metadata.",
+        "operationId": "listModels",
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "List of models",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Model" }
+                    }
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
           }
         }
-      },
+      }
+    },
+    "/chat/completions": {
       "post": {
-        "description": "Creates a new plant in the store",
+        "summary": "Create chat completion",
+        "description": "Generate a chat completion response using FlintAI models.",
+        "operationId": "createChatCompletion",
         "requestBody": {
-          "description": "Plant to add to the store",
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "example": "flintai-mini",
+                    "description": "Model name to use for the completion."
+                  },
+                  "messages": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Message" }
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "example": 0.7
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "List of tools or functions that the model can call."
+                  },
+                  "stream": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": ["model", "messages"]
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Chat completion response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "model": { "type": "string" },
+                    "choices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": { "$ref": "#/components/schemas/Message" },
+                          "finish_reason": { "type": "string" }
+                        }
+                      }
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "total_tokens": { "type": "integer" },
+                        "total_time": { "type": "number" }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -96,32 +152,52 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/pipe/{model}": {
+      "post": {
+        "summary": "Generate text via PipeAPI",
+        "description": "A simplified endpoint for direct prompt–response generation using the specified model.",
+        "operationId": "pipeModel",
         "parameters": [
           {
-            "name": "id",
+            "name": "model",
             "in": "path",
-            "description": "ID of plant to delete",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+              "type": "string"
+            },
+            "description": "Model ID to use for text generation."
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prompt": { "type": "string" },
+                  "context": { "type": "string" }
+                },
+                "required": ["prompt"]
+              }
+            }
+          }
+        },
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
+          "200": {
+            "description": "Generated text response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "content": { "type": "string" },
+                    "model": { "type": "string" },
+                    "id": { "type": "string" },
+                    "total_time": { "type": "number" },
+                    "total_tokens": { "type": "integer" },
+                    "tps": { "type": "number" }
+                  }
                 }
               }
             }
@@ -130,88 +206,10 @@
       }
     }
   },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
-      }
+  "x-mint": {
+    "metadata": {
+      "title": "FlintAI API Reference",
+      "description": "Comprehensive API documentation for FlintAI endpoints."
     }
   }
 }

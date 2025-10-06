@@ -17,8 +17,16 @@
             "group": "Getting started",
             "pages": [
               "index",
-              "quickstart",
-              "models"
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Models",
+            "pages": [
+              "models/index",
+              "models/flintai-mini",
+              "models/flintai",
+              "models/flintai-ultra"
             ]
           }
         ]

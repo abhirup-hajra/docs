@@ -1,0 +1,45 @@
+---
+title: "All Models"
+description: "Explore all the models available on FlintAI."
+sidebarTitle: "All Models"
+icon: "box-archive"
+mode: "wide"
+---
+
+## Available Models
+
+<Card title="FlintAI Mini" icon="sparkle" iconType="regular" color="#e9fff7" horizontal href="/models/flintai-mini">
+  A pocket-sized general-purpose model built for quick & short responses.
+</Card>
+
+<Card title="FlintAI" icon="sparkle" iconType="solid" color="#81ffd1" horizontal href="/models/flintai">
+  A versatile, general-purpose model that balances speed and intelligence for everyday use.
+</Card>
+
+<Card title="FlintAI Ultra" icon="sparkles" iconType="solid" color="#18dd95" horizontal href="/models/flintai-ultra">
+  A high-performance model engineered for advanced reasoning, complex problem-solving, and large-scale creative projects.
+</Card>
+
+## Get All Available Models
+
+Available models can be listed through the FlintAI Models API endpoint. You can use the `https://ai.flintstudios.workers.dev/v1/models` endpoint to return a JSON list of all active models:
+
+<CodeGroup>
+
+```bash Terminal
+curl -X GET "https://ai.flintstudios.workers.dev/v1/models" \
+     -H "Authorization: Bearer $FLINTAI_API_KEY" \
+     -H "Content-Type: application/json"
+```
+
+
+```python Python
+from flintai import FlintAI
+
+client = FlintAI()
+
+for model in client.models():
+    print(" - " + model.name)
+```
+
+</CodeGroup>

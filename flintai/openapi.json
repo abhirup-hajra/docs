@@ -58,6 +58,13 @@
         "summary": "List models",
         "description": "Retrieve all available models with their metadata.",
         "operationId": "listModels",
+        "x-codeSamples": [
+          {
+            "lang": "python",
+            "lable": "FlintAI SDK",
+            "source": "from flintai import FlintAI\n\nclient = FlintAI()\n\nfor model in client.models():\n    print(' - '+ model.name)"
+          }
+        ]
         "responses": {
           "200": {
             "description": "List of models",
@@ -291,7 +298,7 @@
     },
     "/pipe/{model}": {
       "post": {
-        "summary": "Generate text via PipeAPI",
+        "summary": "FlintAI Pipe API",
         "description": "A simplified endpoint for direct prompt–response generation using the specified model.",
         "operationId": "pipeModel",
         "parameters": [

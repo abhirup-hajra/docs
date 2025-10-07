@@ -90,6 +90,13 @@
         "summary": "Create chat completion",
         "description": "Creates a model response for the given conversation. This endpoint accepts system, user, assistant, and tool messages, and supports function/tool calling and streaming responses.",
         "operationId": "createChatCompletion",
+        "x-codeSamples": [
+          {
+            "lang": "python",
+            "lable": "FlintAI SDK",
+            "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.complete(messages=[{\n                                  'role': 'user',\n                                  'content': '<string>'\n                                }] or '<string>',\n                                \nodel='<string>'\n                      )\n\nprint(response.content)"
+          }
+        ],
         "x-mint": {
           "metadata": {
             "title": "Chat Completion API",
@@ -301,6 +308,13 @@
         "summary": "FlintAI Pipe API",
         "description": "A simplified endpoint for direct prompt–response generation using the specified model.",
         "operationId": "pipeModel",
+        "x-codeSamples": [
+          {
+            "lang": "python",
+            "lable": "FlintAI SDK",
+            "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.pipe(prompt='<string>', model='<string>')\n\nprint(response.content)"
+          }
+        ],
         "parameters": [
           {
             "name": "model",

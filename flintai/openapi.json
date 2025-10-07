@@ -94,7 +94,7 @@
           {
             "lang": "python",
             "lable": "FlintAI SDK",
-            "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.complete(messages=[{\n                                  'role': 'user',\n                                  'content': '<string>'\n                                }] or '<string>',\n                                model='<string>'\n                      )\n\nprint(response.content)"
+            "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.complete(messages=[{\n                                  'role': 'user',\n                                  'content': '<string>'\n                                }] or '<string>',\n                       model='<string>'\n                      )\n\nprint(response.content)"
           }
         ],
         "x-mint": {
@@ -306,13 +306,18 @@
     "/pipe/{model}": {
       "post": {
         "summary": "FlintAI Pipe API",
-        "description": "A simplified endpoint for direct prompt–response generation using the specified model.",
+        "description": "A simplified endpoint for direct prompt–response generation using the specified model. The response body contains only the generated text, while response metadata such as model ID and token usage are returned in the HTTP headers.",
         "operationId": "pipeModel",
         "x-codeSamples": [
           {
             "lang": "python",
-            "lable": "FlintAI SDK",
+            "label": "FlintAI SDK",
             "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.pipe(prompt='<string>', model='<string>')\n\nprint(response.content)"
+          },
+          {
+            "lang": "bash",
+            "label": "cURL",
+            "source": "curl -X POST \"https://ai.flintstudios.workers.dev/v1/pipe/flintai-mini\" \\\n -H \"Authorization: Bearer $FLINTAI_API_KEY\" \\\n -H \"Content-Type: application/json\" \\\n -d '{\"prompt\": \"Write a short haiku about the night sky.\"}'"
           }
         ],
         "parameters": [
@@ -333,29 +338,73 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "prompt": { "type": "string" },
-                  "context": { "type": "string" }
+                  "prompt": {
+                    "type": "string",
+                    "description": "Prompt text to generate a response from."
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Optional contextual string that provides background information to the model."
+                  }
                 },
                 "required": ["prompt"]
+              },
+              "examples": {
+                "basicRequest": {
+                  "summary": "Basic Pipe request",
+                  "value": {
+                    "prompt": "Write a short haiku about the night sky."
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Generated text response",
+            "description": "Plain text response containing only the generated output.",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "content": { "type": "string" },
-                    "model": { "type": "string" },
-                    "id": { "type": "string" },
-                    "total_time": { "type": "number" },
-                    "total_tokens": { "type": "integer" },
-                    "tps": { "type": "number" }
-                  }
+                  "type": "string",
+                  "example": "Silent stars whisper\nThrough the endless, quiet void\nDreams drift into night."
+                }
+              }
+            },
+            "headers": {
+              "Model": {
+                "description": "Model ID used for generation.",
+                "schema": {
+                  "type": "string",
+                  "example": "flintai-mini"
+                }
+              },
+              "ID": {
+                "description": "Unique response identifier.",
+                "schema": {
+                  "type": "string",
+                  "example": "pipe-abc123"
+                }
+              },
+              "Total-Time": {
+                "description": "Total processing time for this request (in seconds).",
+                "schema": {
+                  "type": "number",
+                  "example": 0.79
+                }
+              },
+              "Total-Tokens": {
+                "description": "Total tokens consumed by the request.",
+                "schema": {
+                  "type": "integer",
+                  "example": 47
+                }
+              },
+              "TPS": {
+                "description": "Tokens per second (processing speed).",
+                "schema": {
+                  "type": "number",
+                  "example": 59.5
                 }
               }
             }

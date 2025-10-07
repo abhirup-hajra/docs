@@ -94,7 +94,7 @@
           {
             "lang": "python",
             "lable": "FlintAI SDK",
-            "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.complete(messages=[{\n                                  'role': 'user',\n                                  'content': '<string>'\n                                }] or '<string>',\n                                \nodel='<string>'\n                      )\n\nprint(response.content)"
+            "source": "from flintai import FlintAI\n\nai = FlintAI(api_key='<token>')\nresponse = ai.complete(messages=[{\n                                  'role': 'user',\n                                  'content': '<string>'\n                                }] or '<string>',\n                                model='<string>'\n                      )\n\nprint(response.content)"
           }
         ],
         "x-mint": {

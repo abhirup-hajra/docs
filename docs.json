@@ -31,9 +31,7 @@
           },
           {
             "group": "API Reference",
-            "pages": [
-              "flintai/api-reference/endpoint/chat_completions"
-            ]
+            "openapi": "flintai/api-reference/openapi.json"
           }
         ]
       }

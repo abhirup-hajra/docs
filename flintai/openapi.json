@@ -64,7 +64,7 @@
             "lable": "FlintAI SDK",
             "source": "from flintai import FlintAI\n\nclient = FlintAI()\n\nfor model in client.models():\n    print(' - '+ model.name)"
           }
-        ]
+        ],
         "responses": {
           "200": {
             "description": "List of models",

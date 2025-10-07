@@ -81,59 +81,196 @@
     "/chat/completions": {
       "post": {
         "summary": "Create chat completion",
-        "description": "Generate a chat completion response using FlintAI models.",
+        "description": "Creates a model response for the given conversation. This endpoint accepts system, user, assistant, and tool messages, and supports function/tool calling and streaming responses.",
         "operationId": "createChatCompletion",
+        "x-mint": {
+          "metadata": {
+            "title": "Chat Completion API",
+            "description": "The Chat Completions API allows you to send messages and tools to FlintAI models, returning assistant responses or tool calls. Compatible with OpenAI SDKs."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["model", "messages"],
                 "properties": {
                   "model": {
                     "type": "string",
-                    "example": "flintai-mini",
-                    "description": "Model name to use for the completion."
+                    "description": "ID of the model to use.",
+                    "example": "flintai-mini"
                   },
                   "messages": {
                     "type": "array",
-                    "items": { "$ref": "#/components/schemas/Message" }
-                  },
-                  "temperature": {
-                    "type": "number",
-                    "example": 0.7
+                    "description": "An array of messages in the conversation so far.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": ["system", "user", "assistant", "tool"],
+                          "description": "The role of the message author."
+                        },
+                        "content": {
+                          "type": ["string", "null"],
+                          "description": "The contents of the message. Optional if tool_calls are provided."
+                        },
+                        "tool_calls": {
+                          "type": ["array", "null"],
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "type": { "type": "string", "example": "function" },
+                              "function": {
+                                "type": "object",
+                                "properties": {
+                                  "name": { "type": "string" },
+                                  "arguments": {
+                                    "type": "string",
+                                    "description": "Arguments in JSON format."
+                                  }
+                                },
+                                "required": ["name", "arguments"]
+                              }
+                            },
+                            "required": ["id", "type", "function"]
+                          }
+                        },
+                        "tool_call_id": {
+                          "type": ["string", "null"],
+                          "description": "The tool call ID that this message responds to. Only used for role=tool."
+                        }
+                      },
+                      "required": ["role"]
+                    }
                   },
                   "tools": {
-                    "type": "array",
-                    "description": "List of tools or functions that the model can call."
+                    "type": ["array", "null"],
+                    "description": "A list of tools the model may call.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "example": "function" },
+                        "function": {
+                          "type": "object",
+                          "properties": {
+                            "name": { "type": "string" },
+                            "description": { "type": "string" },
+                            "parameters": {
+                              "type": "object",
+                              "description": "Function parameters defined as a JSON Schema object."
+                            }
+                          },
+                          "required": ["name"]
+                        }
+                      },
+                      "required": ["type"]
+                    }
+                  },
+                  "tool_choice": {
+                    "type": ["string", "object", "null"],
+                    "description": "Controls which tool (if any) is called by the model. One of `none`, `auto`, `required`, or an explicit function object."
                   },
                   "stream": {
-                    "type": "boolean",
+                    "type": ["boolean", "null"],
+                    "description": "If true, partial message deltas will be sent as SSE stream. Defaults to false.",
                     "default": false
+                  },
+                  "max_completion_tokens": {
+                    "type": ["integer", "null"],
+                    "description": "The maximum number of tokens that can be generated in the chat completion."
+                  },
+                  "temperature": {
+                    "type": ["number", "null"],
+                    "description": "Sampling temperature. Range 0–2. Higher values = more randomness.",
+                    "example": 0.7
+                  },
+                  "top_p": {
+                    "type": ["number", "null"],
+                    "description": "Nucleus sampling value. Range 0–1."
+                  },
+                  "stop": {
+                    "type": ["string", "null"],
+                    "description": "A string which, if encountered, stops further token generation."
                   }
-                },
-                "required": ["model", "messages"]
+                }
+              },
+              "examples": {
+                "basicRequest": {
+                  "summary": "Requesting a basic chat completion",
+                  "value": {
+                    "model": "flintai-mini",
+                    "messages": [
+                      { "role": "user", "content": "Write a poem about time." }
+                    ]
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Chat completion response",
+            "description": "Successful chat completion response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "id": { "type": "string" },
+                    "object": { "type": "string", "example": "chat.completion" },
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp (seconds)"
+                    },
                     "model": { "type": "string" },
                     "choices": {
                       "type": "array",
+                      "description": "List of chat completion choices",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "message": { "$ref": "#/components/schemas/Message" },
-                          "finish_reason": { "type": "string" }
+                          "index": { "type": "integer" },
+                          "finish_reason": {
+                            "type": "string",
+                            "description": "The reason the model stopped generating tokens."
+                          },
+                          "message": {
+                            "type": "object",
+                            "properties": {
+                              "role": { "type": "string", "example": "assistant" },
+                              "content": { "type": ["string", "null"] },
+                              "reasoning": {
+                                "type": ["string", "null"],
+                                "description": "The model’s reasoning for the response (reasoning models only)."
+                              },
+                              "tool_calls": {
+                                "type": ["array", "null"],
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": { "type": "string" },
+                                    "type": { "type": "string", "example": "function" },
+                                    "function": {
+                                      "type": "object",
+                                      "properties": {
+                                        "name": { "type": "string" },
+                                        "arguments": { "type": "string" }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
                         }
                       }
                     },

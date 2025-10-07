@@ -31,7 +31,12 @@
           },
           {
             "group": "API Reference",
-            "openapi": "flintai/openapi.json"
+            "openapi": "flintai/openapi.json",
+            "pages": [
+              "GET /models",
+              "POST /chat/completions",
+              "POST /pipe/{model}"
+            ]
           }
         ]
       }

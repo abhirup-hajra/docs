@@ -31,7 +31,7 @@
           },
           {
             "group": "API Reference",
-            "openapi": "flintai/api-reference/openapi.json"
+            "openapi": "flintai/openapi.json"
           }
         ]
       }
